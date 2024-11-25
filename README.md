@@ -1,2 +1,2 @@
 # Robot-control-ML-UW
-Machine Learning Warsaw University course Robot control repo
+Machine Learning Warsaw University course Robot control
