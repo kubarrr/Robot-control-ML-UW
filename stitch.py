@@ -176,7 +176,7 @@ def find_homography_with_ransac(src_pts, dst_pts):
 
     return best_model
 
-# CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS - USED IN TASKS 6, 7
+# CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS WITH RANSAC - USED IN TASKS 6, 7
 def calc_homography_based_on_match_pairs(path_matches):
     npz = np.load(path_matches)
     pts1=[]
@@ -581,10 +581,10 @@ def task7():
 
 
 if __name__ == '__main__':
-    #task1()
-    #task2()
+    task1()
+    task2()
     task3()
     #task4()
-    task5()
-    task6()
-    task7()
+    #task5()
+    #task6()
+    #task7()
