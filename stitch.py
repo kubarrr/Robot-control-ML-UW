@@ -144,20 +144,49 @@ def stitch_images(left_img, right_img, seam):
         stitched_img[i, seam[i][1]:, :]=right_img[i, seam[i][1]:, :]
     return stitched_img
 
+# FINDING BEST HOMOGRAPHY WITH RANSAC
+def find_homography_with_ransac(src_pts, dst_pts):
+    best_model = None
+    max_inliers = 0
+    error_t=5
+
+    src_pts=np.array(src_pts)
+    dst_pts=np.array(dst_pts)
+    for _ in range(1000):
+        selected_ids = np.random.choice(len(src_pts), 4, replace=False)
+        selected_src_pts = src_pts[selected_ids]
+        selected_dst_pts = dst_pts[selected_ids]
+
+        H = find_homography(selected_src_pts, selected_dst_pts)
+
+        src_pts_stacked=np.hstack((src_pts, np.ones((len(src_pts), 1))))
+        transformed_pts = np.matmul(H, src_pts_stacked.T).T
+        transformed_pts = transformed_pts/transformed_pts[:, 2].reshape(-1, 1)
+        transformed_pts = transformed_pts[:, :2]
+
+        diffs = np.linalg.norm(transformed_pts-dst_pts, axis=1)
+
+        inliers = np.where(diffs < error_t)[0]
+
+        if len(inliers) > max_inliers:
+            best_model = H
+            max_inliers = len(inliers)
+
+    return best_model
+
 # CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS
 def calc_homography_based_on_match_pairs(path_matches):
     npz = np.load(path_matches)
     pts1=[]
     pts2=[]
     for i, m in enumerate(npz['matches']):
-        # MATCH_CONFIDENCE 0.9 WAS CHOSEN In THIS SPECIFIC CASE
-        if m>=0 and npz['match_confidence'][i]>0.9:
+        if m>=0:
             pts1.append(npz['keypoints0'][i])
             pts2.append(npz['keypoints1'][m])
 
     pts1=np.array(pts1)
     pts2=np.array(pts2)
-    H=find_homography(pts1, pts2)
+    H=find_homography_with_ransac(pts1, pts2)
     return H
 
 # FUNCTIONS FOR DISPLAYING RESULTS OF PARTICULAR TASK
@@ -527,6 +556,26 @@ def task7():
     cv2.destroyAllWindows()
     cv2.imwrite(f"task7_stitched.png", stitched_panorama)
 
+    # for i in range(1000):
+    #     selected_four_ids=np.random.choice(n, 4, replace=False)
+    #     selected_src_pts=src_pts[selected_four_ids]
+    #     selected_dst_pts=dst_pts[selected_four_ids]
+    #     H=find_homography(selected_src_pts, selected_dst_pts)
+    #     new_dst_pts_arr=np.matmul(H, src_pts_arr.T).T
+    #     new_dst_pts_arr[:, 0], new_dst_pts_arr[:, 1]=new_dst_pts_arr[:, 0]/new_dst_pts_arr[:, 2], new_dst_pts_arr[:, 1]/new_dst_pts_arr[:, 2]
+    #     diffs=np.sqrt((new_dst_pts_arr[:, 0]-dst_pts_arr[:, 0])**2+(new_dst_pts_arr[:, 1]-dst_pts_arr[:, 1])**2)
+
+    #     inliers_ids=np.where(diffs<error_t)
+    #     inliers_num=len(inliers_ids)
+    #     if inliers_num>inliers_most:
+    #         best_H=H
+    #         inliers_most=inliers_num
+    #         best_inliers_ids=inliers_ids
+    
+    # return best_inliers_ids
+
+
+
 if __name__ == '__main__':
     #task1()
     #task2()
@@ -535,3 +584,6 @@ if __name__ == '__main__':
     #task5()
     #task6()
     task7()
+    # src_pts=[[20, 30], [40, 50], [60, 70], [830, 90], [130, 110]]
+    # dst_pts=[[20, 30], [40, 50], [60, 70], [80, 90], [100, 110]]
+    # print(ransac(src_pts, dst_pts))
