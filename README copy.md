@@ -25,7 +25,7 @@ if __name__ == '__main__':
     task5()
     task6()
     task7()
-```python
+```
 
 ### Key notes for each task and discussion of task1 results:
 
