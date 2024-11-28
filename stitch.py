@@ -1,10 +1,12 @@
+###### IMPORTING LIBRARIES #####
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-# FUNCTIONS USED IN DIFFERENT TASKS
+###### FUNCTIONS USED IN DIFFERENT TASKS #####
 
-# APPLYING PROJECTIVE TRANSFORMATION
+# APPLYING PROJECTIVE TRANSFORMATION - USED IN TASKS 2, 4, 5, 6, 7 
 def apply_projective_transformation(src_image, H):
     height = src_image.shape[0]
     width = src_image.shape[1]
@@ -38,9 +40,10 @@ def apply_projective_transformation(src_image, H):
     cv2.imshow("transformed", dst_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
     return dst_image, min_x, max_x, min_y, max_y
 
-# FINDING HOMOGRAPHY
+# FINDING HOMOGRAPHY - USED IN TASKS 3, 4, 5, 6, 7
 def find_homography(src_pts, dst_pts):
     A=[]
     for i in range(len(src_pts)):
@@ -55,7 +58,7 @@ def find_homography(src_pts, dst_pts):
     H=eigenvector.reshape(3, 3)
     return H
 
-# RESHAPEING PHOTOS TO PLACE THEM ON WHOLE PANORAMA
+# RESHAPING PHOTO TO PLACE IT ON WHOLE PANORAMA - USED IN TASKS 5, 6, 7
 def get_new_shape(img, min_x, max_x, min_y, max_y, offset_x, offset_y):
     height, width=img.shape[0], img.shape[1]
     up=-min_y
@@ -65,12 +68,11 @@ def get_new_shape(img, min_x, max_x, min_y, max_y, offset_x, offset_y):
     right=max_x-width
     width_new=left+width+right
     shape_new = np.zeros((height_new, width_new, 3), dtype=np.uint8)
-    print(shape_new.shape)
     shape_new[-offset_y:height-offset_y, offset_x:offset_x+width, :]=img[:, :, :]
 
     return shape_new
 
-# CALCULATING COST WITH MODIFICATION TO PENALISE NOT OVERLAPPING REGIONS
+# CALCULATING COST WITH MODIFICATION TO PENALISE NOT OVERLAPPING REGIONS - USED IN TASKS 5, 6, 7
 def calc_cost(left, right):
     diff = np.abs(left - right)
     grayscale = 0.3 * diff[:, :, 0] + 0.59 * diff[:, :, 1] + 0.11 * diff[:, :, 2]
@@ -80,7 +82,7 @@ def calc_cost(left, right):
     penalty=grayscale**2+not_overlap*1000000000
     return penalty
 
-# FINDING SEAM
+# FINDING SEAM - USED IN TASKS 5, 6, 7
 def find_seam(left_img, right_img, left_overlap_line, right_overlap_line):
     height, width=left_img.shape[0], left_img.shape[1]
     left_img_overlap=left_img[:, left_overlap_line:right_overlap_line]
@@ -119,7 +121,7 @@ def find_seam(left_img, right_img, left_overlap_line, right_overlap_line):
 
     return best_path
 
-# PLOTTING SEAM
+# PLOTTING SEAM - USED IN TASKS 5, 6, 7
 def plot_seam(left_img, right_img, seam):
     plt.figure(figsize=(12, 6))
     
@@ -135,7 +137,7 @@ def plot_seam(left_img, right_img, seam):
     
     plt.show()
 
-# STITCHING TWO PHOTOS
+# STITCHING TWO PHOTOS - USED IN TASKS 5, 6, 7
 def stitch_images(left_img, right_img, seam):
     height, width=left_img.shape[0], left_img.shape[1]
     stitched_img = np.zeros((height, width, 3), dtype=np.uint8)
@@ -144,7 +146,7 @@ def stitch_images(left_img, right_img, seam):
         stitched_img[i, seam[i][1]:, :]=right_img[i, seam[i][1]:, :]
     return stitched_img
 
-# FINDING BEST HOMOGRAPHY WITH RANSAC
+# FINDING BEST HOMOGRAPHY WITH RANSAC - USED IN TASKS 6, 7
 def find_homography_with_ransac(src_pts, dst_pts):
     best_model = None
     max_inliers = 0
@@ -174,7 +176,7 @@ def find_homography_with_ransac(src_pts, dst_pts):
 
     return best_model
 
-# CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS
+# CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS - USED IN TASKS 6, 7
 def calc_homography_based_on_match_pairs(path_matches):
     npz = np.load(path_matches)
     pts1=[]
@@ -189,13 +191,14 @@ def calc_homography_based_on_match_pairs(path_matches):
     H=find_homography_with_ransac(pts1, pts2)
     return H
 
-# FUNCTIONS FOR DISPLAYING RESULTS OF PARTICULAR TASK
+###### FUNCTIONS FOR DISPLAYING RESULTS OF PARTICULAR TASKS #####
 
 ############################
 ########## TASK 1 ########## 
 ############################
 
 def task1():
+    # PREPARING CALIBRATION IMAGES AND MARKER DETECTORS
     calibration_images = []
     for i in range(1, 28):
         img = cv2.imread(f"./calibration/img{i}.png")
@@ -207,7 +210,7 @@ def task1():
     parameters = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(dictionary, parameters)
 
-    # FIRST CALIBRATION METHOD BY USING ALL BOARD
+    # FIRST CALIBRATION METHOD BY USING FULL BOARD OF MARKERS WITH KNOWN DISTANCES BETWEEN THEM
     def creating_one_object_points():
         square_size = 168
         spacing=70
@@ -255,13 +258,13 @@ def task1():
         undistorted_image = cv2.remap(img, mapx, mapy, interpolation=cv2.INTER_LINEAR)
         return undistorted_image
     
-    # ret, cameraMatrix, distCoeffs, rvecs, tvecs, obj_points, img_points  = calibrate_camera_all_board()
-    # img_to_undistort=calibration_images[0]
-    # undistorted_image = undistort_image(img_to_undistort, cameraMatrix, distCoeffs)
-    # comparasion = np.hstack((img_to_undistort, undistorted_image))
-    # cv2.imshow("Distorted vs Undistorted", comparasion)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    ret, cameraMatrix, distCoeffs, rvecs, tvecs, obj_points, img_points  = calibrate_camera_all_board()
+    img_to_undistort=calibration_images[0]
+    undistorted_image = undistort_image(img_to_undistort, cameraMatrix, distCoeffs)
+    comparasion = np.hstack((img_to_undistort, undistorted_image))
+    cv2.imshow("Distorted vs Undistorted", comparasion)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # SECOND CALIBRATION METHOD BY USING ONLY ONE MARKER
     def calibrate_camera_one_marker():
@@ -282,20 +285,20 @@ def task1():
         ret2, cameraMatrix2, distCoeffs2, rvecs2, tvecs2 = cv2.calibrateCamera(obj_points2, img_points2, size, None, None)
         return ret2, cameraMatrix2, distCoeffs2, rvecs2, tvecs2, obj_points2, img_points2
 
-    # ret2, cameraMatrix2, distCoeffs2, rvecs2, tvecs2, obj_points2, img_points2 = calibrate_camera_one_marker()
-    # img_to_undistort=calibration_images[0]
-    # undistorted_image2 = undistort_image(img_to_undistort, cameraMatrix2, distCoeffs2)
-    # comparasion2 = np.hstack((img_to_undistort, undistorted_image2))
-    # cv2.imshow("Distorted vs Undistorted", comparasion2)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    ret2, cameraMatrix2, distCoeffs2, rvecs2, tvecs2, obj_points2, img_points2 = calibrate_camera_one_marker()
+    img_to_undistort=calibration_images[0]
+    undistorted_image2 = undistort_image(img_to_undistort, cameraMatrix2, distCoeffs2)
+    comparasion2 = np.hstack((img_to_undistort, undistorted_image2))
+    cv2.imshow("Distorted vs Undistorted", comparasion2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    # print("Calibration with known distances between markers")
-    # print(cameraMatrix)
-    # print(distCoeffs)
-    # print("Calibration based on one marker")
-    # print(cameraMatrix2)
-    # print(distCoeffs2)
+    print("Calibration with known distances between markers")
+    print(cameraMatrix)
+    print(distCoeffs)
+    print("Calibration based on one marker")
+    print(cameraMatrix2)
+    print(distCoeffs2)
 
     # CALCULATING REPROJECTION ERROR
     def calculate_reprojection_error(obj_points, img_points, rvecs, tvecs, cameraMatrix, distCoeffs):
@@ -307,23 +310,27 @@ def task1():
             mean_error += error
         return mean_error
 
-    # print(f"Error for first method is {calculate_reprojection_error(obj_points, img_points, rvecs, tvecs, cameraMatrix, distCoeffs)/len(obj_points)}")
-    # print(f"Error for second method is {calculate_reprojection_error(obj_points2, img_points2, rvecs2, tvecs2, cameraMatrix2, distCoeffs2)/len(obj_points2)}")
+    print(f"Error for first method is {calculate_reprojection_error(obj_points, img_points, rvecs, tvecs, cameraMatrix, distCoeffs)/len(obj_points)}")
+    print(f"Error for second method is {calculate_reprojection_error(obj_points2, img_points2, rvecs2, tvecs2, cameraMatrix2, distCoeffs2)/len(obj_points2)}")
+
+    # RESULTS DISCUSSED IN README FILE
+    # Error for first method is 0.2664872046798019
+    # Error for second method is 0.12271440196217183
 
     # UNDISTORITING AND SAVING STITCHING PHOTOS BY USING BETTER CAMERA CALIBRATION
-    # stitching_images = []
-    # for i in range(1, 10):
-    #     img = cv2.imread(f"./stitching/img{i}.png")
-    #     stitching_images.append(img)
+    stitching_images = []
+    for i in range(1, 10):
+        img = cv2.imread(f"./stitching/img{i}.png")
+        stitching_images.append(img)
 
-    # for i, img in enumerate(stitching_images):
-    #     undistorted_stitching_image = undistort_image(img, cameraMatrix2, distCoeffs2)
-    #     comparasion = np.hstack((img, undistorted_stitching_image))
-    #     cv2.imshow("Distorted vs Undistorted", comparasion)
-    #     # cv2.imshow("Distorted vs Undistorted", undistorted_stitching_image)
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
-    #     cv2.imwrite(f"undistorted_stitching/undistorted_img{i+1}.png", undistorted_stitching_image)
+    for i, img in enumerate(stitching_images):
+        undistorted_stitching_image = undistort_image(img, cameraMatrix2, distCoeffs2)
+        comparasion = np.hstack((img, undistorted_stitching_image))
+        cv2.imshow("Distorted vs Undistorted", comparasion)
+        # cv2.imshow("Distorted vs Undistorted", undistorted_stitching_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        cv2.imwrite(f"undistorted_stitching/undistorted_img{i+1}.png", undistorted_stitching_image)
 
 
 ############################
@@ -331,7 +338,9 @@ def task1():
 ############################
 
 def task2():
+    # EXAMPLE PHOTO TO VISUALISE RESULT
     src_img = cv2.imread(f"./undistorted_stitching/undistorted_img1.png")
+
     # FOUND HOMOGRAPHY IN TASK 4
     H=np.array([[ 7.98740818e-01, -2.10795707e-02,  1.69309897e+02],
         [-4.99802327e-02,  8.80379806e-01,  4.50679763e+01],
@@ -342,6 +351,7 @@ def task2():
 ############################
 ########## TASK 3 ########## 
 ############################
+
 def task3():
     # TESTS
     def test_find_homography(H, shape=[720, 1280]):
@@ -364,14 +374,16 @@ def task3():
     for H in random_homographies:
         test_find_homography(H)
 
-    ############################
-    ########## TASK 4 ########## 
-    ############################
+############################
+########## TASK 4 ########## 
+############################
+
 def task4():
+    # PHOTOS TO STITCH
     src_img = cv2.imread(f"./undistorted_stitching/undistorted_img1.png")
     dst_img = cv2.imread(f"./undistorted_stitching/undistorted_img2.png")
 
-    # MANUALLY ZOOMING AND SELECTING POINTS
+    # MANUALLY ZOOMING AND SELECTING POINTS BY CLICKING MOUSE ON PIXELS
 
     # pts=[]
     # def get_coordinates(event, x, y, flags, param):
@@ -387,12 +399,12 @@ def task4():
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    # CORRECTING CORDINATES FROM ZOOMING
+    # # CORRECTING CORDINATES FROM ZOOMING
 
-    def correct_x(x, start, end, width):
-        return round(start+(x/width)*(end-start))
-    def correct_y(y, start, end, height):
-        return round(start+(y/height)*(end-start))
+    # def correct_x(x, start, end, width):
+    #     return round(start+(x/width)*(end-start))
+    # def correct_y(y, start, end, height):
+    #     return round(start+(y/height)*(end-start))
 
     # src_pts=np.array(pts)
     # src_pts_corrected=np.array(src_pts)
@@ -415,6 +427,7 @@ def task4():
     #     dst_pts_corrected[i][1]=correct_y(dst_pts_corrected[i][1], 200, 600, 1000)
 
     # H=find_homography(src_pts_corrected, dst_pts_corrected)
+    # print(H)
 
     # FOUND HOMOGRAPHY
     H=np.array([[ 7.98740818e-01, -2.10795707e-02,  1.69309897e+02],
@@ -428,32 +441,25 @@ def task4():
 ############################
 ########## TASK 5 ########## 
 ############################
+
 def task5():
-
+    # PHOTOS TO STITCH
     src_img = cv2.imread(f"./undistorted_stitching/undistorted_img1.png")
-
     dst_img = cv2.imread(f"./undistorted_stitching/undistorted_img2.png")
 
-
-    # FOUND H IN TASK 4
+    # H FOUND H IN TASK 4
     H=np.array([[ 7.98740818e-01, -2.10795707e-02,  1.69309897e+02],
         [-4.99802327e-02,  8.80379806e-01,  4.50679763e+01],
         [-1.33520799e-04, -3.90246481e-05,  1.00000000e+00]])
 
     src_transformed, min_x, max_x, min_y, max_y=apply_projective_transformation(src_img, H)
 
+    # GETTING TO KNOW CORDINATES FOR MAKING WHOLE PANORAMA AREA AND ALSO FOR CALCULATING OVERLAPPING REGIONS
     min_xdst, max_xdst, min_ydst, max_ydst=0, 1280, 0, 720
     x_min, x_max, y_min, y_max=min(min_x, min_xdst), max(max_x, max_xdst), min(min_y, min_ydst), max(max_y, max_ydst)
-    # print(x_min, x_max, y_min, y_max)
 
     src_transformed_reshaped=get_new_shape(src_transformed, x_min, x_max, y_min, y_max, min_x, 0)
-    # cv2.imshow("src reshaped image", src_transformed_reshaped)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     dst_reshaped=get_new_shape(dst_img, x_min, x_max, y_min, y_max, 0, min_y)
-    # cv2.imshow("dst reshaped image", dst_reshaped)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
     best_seam=find_seam(dst_reshaped, src_transformed_reshaped, min_x, max_xdst)
     plot_seam(dst_reshaped, src_transformed_reshaped, best_seam)
@@ -462,16 +468,20 @@ def task5():
     cv2.imshow("stitched image", stitched_img12)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite(f"task5_stitched12.png", stitched_img12)
+
+    #SAVING FILE
+    cv2.imwrite(f"task_5_stitched.jpg", stitched_img12)
 
 ############################
 ########## TASK 6 ########## 
 ############################
 
 def task6():
+    # PHOTOS TO STITCH
     dst_img6 = cv2.imread(f"./undistorted_stitching/undistorted_img8.png")
-
     src_img6 = cv2.imread(f"./undistorted_stitching/undistorted_img9.png")
+
+    # MATCHING PAIRS FOUNDED WITH SUPERGLUE
     path_matches98 = './matches/undistorted_img9_undistorted_img8_matches.npz'
 
     H6=calc_homography_based_on_match_pairs(path_matches98)
@@ -484,17 +494,22 @@ def task6():
     dst_reshaped6=get_new_shape(dst_img6, x_min, x_max, y_min, y_max, -min_x, min_y)
 
     best_seam98=find_seam(src_transformed6_reshaped, dst_reshaped6, -min_x, max_x)
-    plot_seam(src_transformed6_reshaped, dst_reshaped6, best_seam98)
+    #plot_seam(src_transformed6_reshaped, dst_reshaped6, best_seam98)
+
     stitched98=stitch_images(src_transformed6_reshaped, dst_reshaped6, best_seam98)
     cv2.imshow("stitched98", stitched98)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite(f"task6_stitched98.png", stitched98)
+
+    #SAVING FILE
+    cv2.imwrite(f"task_6_stitched.jpg", stitched98)
 
 def task7():
+    # STITCHING 5 IMAGES: (IMG1, IMG2, IMG3, IMG4, IMG5)
     def stitch_5_images(dst_img,src_img1, src_img2, src_img4, src_img5, path_matches13, path_matches23, path_matches43, path_matches53):
-        #STITCHING ORDER 3<-2, 32<-1, 4->321, 5->4321
+        # STITCHING ORDER 3<-2, 32<-1, 4->321, 5->4321
 
+        # MATCHING PAIRS FROM SUPERGLUE
         H13=calc_homography_based_on_match_pairs(path_matches13)
         H23=calc_homography_based_on_match_pairs(path_matches23)
         H43=calc_homography_based_on_match_pairs(path_matches43)
@@ -506,6 +521,7 @@ def task7():
 
         # CORDINATES OF MIDDLE PHOTO
         min_x3, max_x3, min_y3, max_y3=0, 1280, 0, 720
+
         x_min_all, x_max_all=min(min_x3, min_x13, min_x23, min_x43, min_x53), max(max_x3, max_x13, max_x23, max_x43, max_x53)
         y_min_all, y_max_all=min(min_y3, min_y13, min_y23, min_y43, min_y53), max(max_y3, max_y13, max_y23, max_y43, max_y53)
 
@@ -519,23 +535,27 @@ def task7():
 
         # STITCHING 32
         best_seam32=find_seam(dst_reshaped, src23_transformed_reshaped, -x_min_all+min_x23, -x_min_all+max_x3)
-        plot_seam(dst_reshaped, src23_transformed_reshaped, best_seam32)
+        #plot_seam(dst_reshaped, src23_transformed_reshaped, best_seam32)
         stitched32=stitch_images(dst_reshaped, src23_transformed_reshaped, best_seam32)
+
         # STITCHING 321
         best_seam321=find_seam(stitched32, src13_transformed_reshaped, -x_min_all+min_x13, -x_min_all+max_x23)
-        plot_seam(stitched32, src13_transformed_reshaped, best_seam321)
+        #plot_seam(stitched32, src13_transformed_reshaped, best_seam321)
         stitched321=stitch_images(stitched32, src13_transformed_reshaped, best_seam321)
+
         # STITCHING 4321
         best_seam4321=find_seam(src43_transformed_reshaped, stitched321, -x_min_all, -x_min_all+max_x43)
-        plot_seam(src43_transformed_reshaped, stitched321, best_seam4321)
+        #plot_seam(src43_transformed_reshaped, stitched321, best_seam4321)
         stitched4321=stitch_images(src43_transformed_reshaped, stitched321, best_seam4321)
+
         # STITCHING 54321
         best_seam54321=find_seam(src53_transformed_reshaped, stitched4321, -x_min_all+min_x43, -x_min_all+max_x53)
-        plot_seam(src53_transformed_reshaped, stitched4321, best_seam54321)
+        #plot_seam(src53_transformed_reshaped, stitched4321, best_seam54321)
         stitched54321=stitch_images(src53_transformed_reshaped, stitched4321, best_seam54321)
-
+        
         return stitched54321
 
+    # READING PHOTOS AND MATCHING PAIRS
     dst_img = cv2.imread(f"./undistorted_stitching/undistorted_img3.png")
 
     src_img1 = cv2.imread(f"./undistorted_stitching/undistorted_img1.png")
@@ -550,40 +570,21 @@ def task7():
     src_img5 = cv2.imread(f"./undistorted_stitching/undistorted_img5.png")
     path_matches53 = './matches/undistorted_img5_undistorted_img3_matches.npz'
 
+    # STITCHING 5 PHOTOS
     stitched_panorama=stitch_5_images(dst_img,src_img1, src_img2, src_img4, src_img5, path_matches13, path_matches23, path_matches43, path_matches53)
     cv2.imshow("stitched panorama", stitched_panorama)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite(f"task7_stitched.png", stitched_panorama)
 
-    # for i in range(1000):
-    #     selected_four_ids=np.random.choice(n, 4, replace=False)
-    #     selected_src_pts=src_pts[selected_four_ids]
-    #     selected_dst_pts=dst_pts[selected_four_ids]
-    #     H=find_homography(selected_src_pts, selected_dst_pts)
-    #     new_dst_pts_arr=np.matmul(H, src_pts_arr.T).T
-    #     new_dst_pts_arr[:, 0], new_dst_pts_arr[:, 1]=new_dst_pts_arr[:, 0]/new_dst_pts_arr[:, 2], new_dst_pts_arr[:, 1]/new_dst_pts_arr[:, 2]
-    #     diffs=np.sqrt((new_dst_pts_arr[:, 0]-dst_pts_arr[:, 0])**2+(new_dst_pts_arr[:, 1]-dst_pts_arr[:, 1])**2)
-
-    #     inliers_ids=np.where(diffs<error_t)
-    #     inliers_num=len(inliers_ids)
-    #     if inliers_num>inliers_most:
-    #         best_H=H
-    #         inliers_most=inliers_num
-    #         best_inliers_ids=inliers_ids
-    
-    # return best_inliers_ids
-
+    # SAVING FILE
+    cv2.imwrite(f"task_7_stitched.jpg", stitched_panorama)
 
 
 if __name__ == '__main__':
     #task1()
     #task2()
-    #task3()
+    task3()
     #task4()
-    #task5()
-    #task6()
+    task5()
+    task6()
     task7()
-    # src_pts=[[20, 30], [40, 50], [60, 70], [830, 90], [130, 110]]
-    # dst_pts=[[20, 30], [40, 50], [60, 70], [80, 90], [100, 110]]
-    # print(ransac(src_pts, dst_pts))
