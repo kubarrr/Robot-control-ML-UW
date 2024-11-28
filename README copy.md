@@ -16,11 +16,12 @@ First part of code includes all functions which are used in different tasks:
  - calc_homography_based_on_match_pairs - CALCULATING HOMOGRAPHY BASED ON SUPERGLUE MATCHING PAIRS WITH RANSAC- USED IN TASKS 6, 7
 
 Second part of code is divided into 7 functions for particular tasks. We can choose results of which task we want to display while stitch.py execution by uncommenting functions:
+```python
 if __name__ == '__main__':
-    #task1()
-    #task2()
+    # task1()
+    # task2()
     task3()
-    #task4()
+    # task4()
     task5()
     task6()
     task7()
