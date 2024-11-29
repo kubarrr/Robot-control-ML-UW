@@ -4,7 +4,7 @@ Python 3.8.8
 
 ### According to instruction, full code is in one file stitch.py.
 
-I uploaded the following on Moodle:
+I uploaded on Moodle 472844.zip file containing:
 - task_5_stitched.jpg, task_6_stitched.jpg, task_7_stitched.jpg
 - stitch.py
 - README.md
@@ -12,7 +12,7 @@ I uploaded the following on Moodle:
 - folder matches, which includes matching pairs found by SuperGlue (npz and png files)
 - folder stitching containing undistorted_img{i}.png files which were generated in task1, of course it is possible to execute code for task1 and generate them again.
 
-I don't attach the calibration folder and the original stitching photos. They should be added in the same directory as the stitch.py file. Orginal photos can be uploaded to already existing stitching folder with undistorted photos.
+I don't attach the calibration folder. It should be added in the same directory as the stitch.py file. Orginal photos can be uploaded to already existing stitching folder with undistorted photos.
 
 First part of code includes all functions which are used in different tasks:
 - apply_projective_transformation - APPLYING PROJECTIVE TRANSFORMATION - USED IN TASKS 2, 4, 5, 6, 7 
