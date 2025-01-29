@@ -1,2 +1,2 @@
 # Robot-control-ML-UW
-Machine Learning Warsaw University course Robot control
+Machine Learning Warsaw University course Robot control homeworks.
